@@ -56,11 +56,34 @@ class ContainerP{
     this.yMax = yMax;
   }
 
-  static isHitByCircle(a){
+  getBounce(a, speed){
     if( ! ( a[movableIF] ) ){
       throw Error('Illegal argument');
     }
-    const {radius : aRad, x : aX, y:  aY} = a[movableIF];
+    const {radius : aRad, x : aX, y:  aY} = a[movableIF]();
+    if(aX + aRad > this.xMax ){
+      return {x : - speed.x, y : speed.y};
+    }
+    if(aX - aRad < this.xMin){
+      return {x : - speed.x, y : speed.y};
+    }
+    if(aY + aRad > this.yMax){
+      return {x : + speed.x, y : - speed.y};
+    }
+    if( aY - aRad < this.yMin){
+      return {x : + speed.x, y : - speed.y};
+    }
+    return speed;
+  }
+
+  isHitByCircle(a){
+    if( ! ( a[movableIF] ) ){
+      throw Error('Illegal argument');
+    }
+    const {radius : aRad, x : aX, y:  aY} = a[movableIF]();
+    
+  //  console.log(this)
+   // console.log(a[movableIF]())
     return (aX + aRad > this.xMax || aX - aRad < this.xMin || aY + aRad > this.yMax || aY - aRad < this.yMin);
   }
 }

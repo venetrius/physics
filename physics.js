@@ -22,8 +22,10 @@ class Momentum{
     this.rateX = x / (x + y);
     this.rateX = y / (x + y);
   }
-  slowDown(time){
-    this.rateX
+
+  decaySlowdownDown(time){
+    this.rateX -= SLOWING_RATE * this.x;
+    this.rateX -= SLOWING_RATE * this.y;
   }
 }
 
@@ -37,14 +39,31 @@ class Coordinate{
     return new Coordinate(this.x, this.y);
   }
 }
-class CircleP{
-  static isCollusion(a, b){
-    if( ! ( a[movableIF] && b[movableIF] ) ){
+
+class Circle{
+  constructor(coord, radius){
+    this.coordinate = coord;
+    this.radius = radius;
+  }
+
+  static createWORad(coord){
+    let newCircle = new Circle(coord);
+    delete newCircle.radius;
+    return newCircle;
+  }
+  isCollusion(b){
+    if( !  b[movableIF] ){
       throw Error('Illegal argument');
     }
-    const {radius : aRad, x : aX, y:  aY} = a[movableIF];
+    const {radius : aRad, x : aX, y:  aY} = this[movableIF];
     const {radius : bRad, x : bX, y : bY} = b[movableIF];
     return (aX - bX)**2 + (aY-bY)**2 <= (aRad + bRad)**2
+  }
+}
+
+class Hole extends Circle {
+  constructor(coord, radius){
+    super(coord, radius);
   }
 }
 
@@ -81,7 +100,7 @@ class ContainerP{
       throw Error('Illegal argument');
     }
     const {radius : aRad, x : aX, y:  aY} = a[movableIF]();
-    
+
   //  console.log(this)
    // console.log(a[movableIF]())
     return (aX + aRad > this.xMax || aX - aRad < this.xMin || aY + aRad > this.yMax || aY - aRad < this.yMin);
@@ -104,9 +123,4 @@ class Moves{
   }
 }
 
-const m1 = new Moves(1, 2, 1);
-const m2 = new Moves(0, 0, 0);
-const m3 = new Moves(1, 3, 3);
 
-console.log(CircleP.isCollusion( m1, m2));
-console.log(CircleP.isCollusion(m1,m3));

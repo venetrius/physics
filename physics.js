@@ -2,7 +2,7 @@ const radiusIF = Symbol('radius');
 const movableIF = Symbol('movable');
 
 const MIN_SPEED_LIMIT = 0.5;
-const SLOWING_RATE = 0.8;// how much speed is lost while a ball moves 1px
+const SLOWING_RATE = 0.08;// how much speed is lost while a ball moves 1px
 
 const {calcHypotenus, calcLeg} = function() {
   const calcHypotenus = function(a, b){myInterface
@@ -19,13 +19,17 @@ class Momentum{
   constructor(x, y){
     this.x = x ? x : 0;             // how many pixes moves the ball in 10 ms
     this.y = y ? y : 0;
-    this.rateX = x / (x + y);
-    this.rateX = y / (x + y);
+    this.rateX = x / (Math.abs(x) + Math.abs(y));
+    this.rateY = y / (Math.abs(x) + Math.abs(y));
   }
 
   decaySlowdownDown(time){
-    this.rateX -= SLOWING_RATE * this.x;
-    this.rateX -= SLOWING_RATE * this.y;
+    let x = this.x;
+    let y = this.y;
+    let newX = x > 0 ? x - SLOWING_RATE * this.rateX : x + SLOWING_RATE * this.rateX;
+    let newY = y > 0 ? y - SLOWING_RATE * this.rateY : y + SLOWING_RATE * this.rateY;
+    this.x = (this.x * newX > 0) ? newX : 0;
+    this.y = (this.y * newY > 0) ? newY : 0;
   }
 }
 
@@ -88,12 +92,23 @@ Ball.prototype[movableIF] = function() {
   };
 }
 
+// represents a box with a rectangle shape
+
 class ContainerP{
   constructor(xMin, xMax, yMin, yMax){
     this.xMin = xMin;
     this.xMax = xMax;
     this.yMin = yMin;
     this.yMax = yMax;
+    this.balls = [];
+    this.holes = [];
+  }
+
+  addBall(ball){
+    if( ! ( ball[movableIF] ) ){
+      throw Error('Illegal argument');
+    }
+    this.balls.push(ball);
   }
 
   // param is a ball
@@ -105,20 +120,17 @@ class ContainerP{
     if(aX + aRad > this.xMax ){
       speed.x = - speed.x;
       speed.y = + speed.y;
-    }
-    else if(aX - aRad < this.xMin){
+    }else if(aX - aRad < this.xMin){
       speed.x = - speed.x;
       speed.y = + speed.y;
-    }
-    if(aY + aRad > this.yMax){
+    }else if(aY + aRad > this.yMax){
       speed.x = speed.x;
       speed.y = - speed.y;
-    }
-    if( aY - aRad < this.yMin){
+    }else if( aY - aRad < this.yMin){
       speed.x = + speed.x;
       speed.y = - speed.y;
     }
-    return speed;
+    speed.decaySlowdownDown(0);
   }
 
   isHitByBall(a){

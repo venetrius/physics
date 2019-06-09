@@ -17,8 +17,8 @@ const {calcHypotenus, calcLeg} = function() {
 
 class Momentum{
   constructor(x, y){
-    this.x = x;             // how many pixes moves the ball in 10 ms
-    this.y = y;
+    this.x = x ? x : 0;             // how many pixes moves the ball in 10 ms
+    this.y = y ? y : 0;
     this.rateX = x / (x + y);
     this.rateX = y / (x + y);
   }
@@ -67,6 +67,27 @@ class Hole extends Circle {
   }
 }
 
+class Ball extends Circle {
+  constructor(coord, radius, speedx, speedy){
+    super(coord, radius);
+    this.momentum = new Momentum(speedx, speedy);
+  }
+
+  static createFromNums(x, y, radius, speedX, speedY){
+    let newBall = new Ball(new Coordinate(x,y), radius, speedX, speedY);
+    return newBall;
+  }
+}
+
+Ball.prototype[movableIF] = function() {
+  return {
+      x : this.coordinate.x,
+      y : this.coordinate.y,
+      radius : this.radius,
+      momentum : this.momentum
+  };
+}
+
 class ContainerP{
   constructor(xMin, xMax, yMin, yMax){
     this.xMin = xMin;
@@ -75,27 +96,32 @@ class ContainerP{
     this.yMax = yMax;
   }
 
-  getBounce(a, speed){
+  // param is a ball
+  getBounce(a){
     if( ! ( a[movableIF] ) ){
       throw Error('Illegal argument');
     }
-    const {radius : aRad, x : aX, y:  aY} = a[movableIF]();
+    const {radius : aRad, x : aX, y:  aY, momentum : speed} = a[movableIF]();
     if(aX + aRad > this.xMax ){
-      return {x : - speed.x, y : speed.y};
+      speed.x = - speed.x;
+      speed.y = + speed.y;
     }
-    if(aX - aRad < this.xMin){
-      return {x : - speed.x, y : speed.y};
+    else if(aX - aRad < this.xMin){
+      speed.x = - speed.x;
+      speed.y = + speed.y;
     }
     if(aY + aRad > this.yMax){
-      return {x : + speed.x, y : - speed.y};
+      speed.x = speed.x;
+      speed.y = - speed.y;
     }
     if( aY - aRad < this.yMin){
-      return {x : + speed.x, y : - speed.y};
+      speed.x = + speed.x;
+      speed.y = - speed.y;
     }
     return speed;
   }
 
-  isHitByCircle(a){
+  isHitByBall(a){
     if( ! ( a[movableIF] ) ){
       throw Error('Illegal argument');
     }
